@@ -71,6 +71,13 @@ void AAIBehaviorCharacter::BeginPlay()
 	}
 }
 
+void AAIBehaviorCharacter::OnAttack()
+{
+	if (Montage && GetMesh()->GetAnimInstance()->Montage_GetIsStopped(Montage)) {
+		PlayAnimMontage(Montage);
+	}
+}
+
 void AAIBehaviorCharacter::SetupStimulusSource()
 {
 	Stimulus = CreateDefaultSubobject<UAIPerceptionStimuliSourceComponent>(TEXT("Stimulus"));
@@ -97,6 +104,7 @@ void AAIBehaviorCharacter::SetupPlayerInputComponent(class UInputComponent* Play
 
 		//Looking
 		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &AAIBehaviorCharacter::Look);
+		PlayerInputComponent->BindAction("Attack", IE_Pressed, this, &AAIBehaviorCharacter::OnAttack);
 
 	}
 

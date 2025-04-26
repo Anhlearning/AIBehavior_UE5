@@ -30,4 +30,6 @@ private:
 
 	UFUNCTION()
 	void OnTargetDetected(AActor* actor, FAIStimulus const Stimulus);
+	UFUNCTION()
+	void OnLostTarget();
 };

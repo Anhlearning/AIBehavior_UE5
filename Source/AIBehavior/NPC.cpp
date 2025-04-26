@@ -37,3 +37,20 @@ void ANPC::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 
 }
 
+AAPatrolPath* ANPC::GetPatrolPath()
+{
+	return PatrolPath;
+}
+
+UAnimMontage* ANPC::GetAnimMontage()
+{
+	return Montage;
+}
+int ANPC::MeleeAttack_Implementation()
+{
+	if (Montage) {
+		PlayAnimMontage(Montage);
+	}
+	return 0;
+}
+

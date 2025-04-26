@@ -18,6 +18,7 @@ EBTNodeResult::Type UMyBTTask_PlayerChase::ExecuteTask(UBehaviorTreeComponent& O
 
 		UAIBlueprintHelperLibrary::SimpleMoveToLocation(cont, playerLoc);
 		FinishLatentTask(OwnerComp, EBTNodeResult::Succeeded);
+		return EBTNodeResult::Succeeded;
 	}
-	return EBTNodeResult::Failed;
+	return EBTNodeResult::Succeeded;
 }

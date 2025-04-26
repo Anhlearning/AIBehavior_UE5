@@ -39,7 +39,7 @@ void ANPCAIController::SetupPerceptionSystem()
     SightConfig->SightRadius = 500.f;
     SightConfig->LoseSightRadius = SightConfig->SightRadius + 25.f;
     SightConfig->PeripheralVisionAngleDegrees = 90.f;
-    SightConfig->SetMaxAge(5.f);
+    SightConfig->SetMaxAge(10.f);
     SightConfig->AutoSuccessRangeFromLastSeenLocation = 520.f;
 
     // Cho phép phát hiện tất cả các loại đối tượng
@@ -61,6 +61,18 @@ void ANPCAIController::SetupPerceptionSystem()
 void ANPCAIController::OnTargetDetected(AActor* actor, FAIStimulus Stimulus)
 {
     if (auto* const ch = Cast<AAIBehaviorCharacter>(actor)) {
-        GetBlackboardComponent()->SetValueAsBool("CanSeePlayer", Stimulus.WasSuccessfullySensed());
+        const bool bSeen = Stimulus.WasSuccessfullySensed();
+        GetBlackboardComponent()->SetValueAsBool("CanSeePlayer", bSeen);
+
+        if (!bSeen)
+        {
+            // Ghi lại thời điểm mất dấu player
+            float TimeNow = GetWorld()->GetTimeSeconds();
+            GetBlackboardComponent()->SetValueAsFloat("LastLostSightTime", TimeNow);
+        }
     }
+}
+
+void ANPCAIController::OnLostTarget()
+{
 }

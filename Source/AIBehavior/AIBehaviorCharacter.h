@@ -4,13 +4,15 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
+#include "CharacterBase.h"
 #include "InputActionValue.h"
 #include "Perception/AIPerceptionStimuliSourceComponent.h"
+#include "Animation/AnimMontage.h"
 #include "AIBehaviorCharacter.generated.h"
 
 
 UCLASS(config=Game)
-class AAIBehaviorCharacter : public ACharacter
+class AAIBehaviorCharacter : public ACharacterBase
 {
 	GENERATED_BODY()
 
@@ -64,6 +66,11 @@ public:
 	/** Returns FollowCamera subobject **/
 	FORCEINLINE class UCameraComponent* GetFollowCamera() const { return FollowCamera; }
 
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="AI",meta=(AllowPrivateAccess="true"))
+	UAnimMontage* Montage;
+
+	UFUNCTION()
+	void OnAttack();
 	class UAIPerceptionStimuliSourceComponent* Stimulus;
 	void SetupStimulusSource();
 };
