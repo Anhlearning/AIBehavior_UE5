@@ -30,7 +30,10 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AI", meta = (AllowPrivateAccess = ""))
 	AAPatrolPath* PatrolPath;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AI", meta = (AllowPrivateAccess = ""))
-	UAnimMontage* Montage;
+	TArray<UAnimMontage*> Montages;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AI", meta = (AllowPrivateAccess = ""))
+	UAnimMontage* DodgeMontage;
+	UAnimMontage* currentAnimMontage;
 	
 public:	
 	// Called every frame
@@ -40,9 +43,13 @@ public:
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 	AAPatrolPath* GetPatrolPath();
 	UAnimMontage* GetAnimMontage();
-
-	int MeleeAttack_Implementation() override;
-	
-	
-
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AI", meta = (AllowPrivateAccess = ""))
+	UStaticMeshComponent* Sword;
+	virtual int MeleeAttack_Implementation() override;
+	virtual int HeavyAttack_Implementation() override;
+	virtual int CounterAttack_Implementation() override;
+	virtual int ShieldAttack_Implementation() override;
+	virtual void DodgeState_Implementation() override;
+	float LastAttackTime = 0.f;
+	float ComboMaxInterval = 1.8f;
 };

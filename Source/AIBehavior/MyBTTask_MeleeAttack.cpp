@@ -15,8 +15,8 @@ EBTNodeResult::Type UMyBTTask_MeleeAttack::ExecuteTask(UBehaviorTreeComponent& O
 {
 	auto const outOfRange = !OwnerComp.GetBlackboardComponent()->GetValueAsBool(GetSelectedBlackboardKey());
 	if (outOfRange) {
-		FinishLatentTask(OwnerComp, EBTNodeResult::Succeeded);
-		return EBTNodeResult::Succeeded;
+		FinishLatentTask(OwnerComp, EBTNodeResult::Failed);
+		return EBTNodeResult::Failed;
 	}
 	auto const* cont = OwnerComp.GetAIOwner();
 	auto const pawn = Cast<ANPC>(cont->GetPawn());

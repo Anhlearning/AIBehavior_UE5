@@ -24,4 +24,12 @@ class AIBEHAVIOR_API ICombat_Interface
 public:
 	UFUNCTION(BlueprintNativeEvent,BlueprintCallable,Category="Combat")
 	int MeleeAttack();
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Combat")
+	int HeavyAttack();
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Combat")
+	int CounterAttack();
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Combat")
+	int ShieldAttack();
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Combat")
+	void DodgeState();
 };
