@@ -12,6 +12,9 @@ ANPC::ANPC()
 	PrimaryActorTick.bCanEverTick = true;
     Sword = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("SWORD MESH"));
     Sword->SetupAttachment(GetMesh(),FName("hand_r_socket"));
+
+    Shield = CreateDefaultSubobject< UStaticMeshComponent>(TEXT("SHIELD MESH"));
+    Shield->SetupAttachment(GetMesh(), FName("hand_l_socket"));
 }
 
 UBehaviorTree* ANPC::GetBehaviorTree() const
@@ -23,7 +26,10 @@ UBehaviorTree* ANPC::GetBehaviorTree() const
 void ANPC::BeginPlay()
 {
 	Super::BeginPlay();
-	
+    UAnimInstance* pAnimInst = GetMesh()->GetAnimInstance();
+    if (pAnimInst) {
+        pAnimInst->OnPlayMontageNotifyBegin.AddDynamic(this,&ANPC::HandleOnMontageNotifyBegin);
+    }
 }
 
 // Called every frame
@@ -52,63 +58,92 @@ UAnimMontage* ANPC::GetAnimMontage()
 }
 int ANPC::MeleeAttack_Implementation()
 {
-    // tinh toan combo 
-    isAttacking = true;
-    float CurrentTime = GetWorld()->GetTimeSeconds();
-    if (CurrentTime - LastAttackTime > ComboMaxInterval)
+    if (!GetMesh()->GetAnimInstance()->Montage_IsPlaying(AttackComboMontage))
     {
-        UE_LOG(LogTemp, Error, TEXT("Qua thoi gian nen reset"));
-        attackCurrentIndex = 0;
+        isAttacking = true;
+        APawn* player = UGameplayStatics::GetPlayerCharacter(GetWorld(), 0);
+        if (player) {
+            FVector dir = player->GetActorLocation() - this->GetActorLocation();
+            dir.Z = 0.0f;
+            FRotator newRotate = dir.Rotation();
+            SetActorRotation(newRotate);
+            if (AttackComboMontage && !GetMesh()->GetAnimInstance()->Montage_IsPlaying(AttackComboMontage))
+            {
+                UE_LOG(LogTemp, Warning, TEXT("BroadCast Anim AttackCombo"));
+                currentAnimMontage = AttackComboMontage;
+                PlayAnimMontage(AttackComboMontage);
+            }
+        }
     }
-    else
-    {
-        attackCurrentIndex = (attackCurrentIndex + 1);
+    if(isAttacking) {
+        attackCurrentIndex = 1;
     }
-    attackCurrentIndex = attackCurrentIndex >= 3 ? attackCurrentIndex = 0 : attackCurrentIndex;
-    LastAttackTime = CurrentTime;
-    APawn* player = UGameplayStatics::GetPlayerCharacter(GetWorld(), 0);
-    if (player) {
-        FVector dir = player->GetActorLocation() - this->GetActorLocation();
-        dir.Z = 0.0f;
-        FRotator newRotate = dir.Rotation();
-        SetActorRotation(newRotate);
-    }
-    if (Montages.IsValidIndex(attackCurrentIndex) && Montages[attackCurrentIndex])
-    {
-        UE_LOG(LogTemp, Error, TEXT("Current Index hien tai la: %d"), attackCurrentIndex);
-        currentAnimMontage = Montages[attackCurrentIndex];
-        PlayAnimMontage(Montages[attackCurrentIndex]);
-    }
-	return 0;
+     return 0;
 }
 
 int ANPC::HeavyAttack_Implementation()
-{
-    isAttacking = true;
-    attackCurrentIndex = 3;
-    APawn* player = UGameplayStatics::GetPlayerCharacter(GetWorld(), 0);
-    if (player) {
-        FVector dir = player->GetActorLocation() - this->GetActorLocation();
-        dir.Z = 0.0f;
-        FRotator newRotate = dir.Rotation();
-        SetActorRotation(newRotate);
-    }
-    if (Montages.IsValidIndex(attackCurrentIndex) && Montages[attackCurrentIndex])
-    {
-        UE_LOG(LogTemp, Error, TEXT("HEAVY STACK"));
-        currentAnimMontage = Montages[attackCurrentIndex];
-        PlayAnimMontage(Montages[attackCurrentIndex]);
+{   
+    if (!isAttacking) {
+        isAttacking = true;
+        APawn* player = UGameplayStatics::GetPlayerCharacter(GetWorld(), 0);
+        if (player) {
+            FVector dir = player->GetActorLocation() - this->GetActorLocation();
+            dir.Z = 0.0f;
+            FRotator newRotate = dir.Rotation();
+            SetActorRotation(newRotate);
+        }
+        if (AttackHeavyMontage)
+        {
+            currentAnimMontage = AttackHeavyMontage;
+            PlayAnimMontage(AttackHeavyMontage);
+        }
     }
     return 0;
 }
 
 int ANPC::CounterAttack_Implementation()
 {
+    if (!isAttacking) {
+        isAttacking = true;
+        APawn* player = UGameplayStatics::GetPlayerCharacter(GetWorld(), 0);
+        if (player) {
+            FVector dir = player->GetActorLocation() - this->GetActorLocation();
+            dir.Z = 0.0f;
+            FRotator newRotate = dir.Rotation();
+            SetActorRotation(newRotate);
+        }
+        if (AttackCounterMontage)
+        {
+            currentAnimMontage = AttackCounterMontage;
+            PlayAnimMontage(AttackCounterMontage);
+        }
+    }
     return 0;
 }
 
 int ANPC::ShieldAttack_Implementation()
 {
+    UE_LOG(LogTemp, Warning, TEXT("%d %d"), isShielAttack, isAttacking);
+    if (!isShielAttack && !isAttacking) {
+        isShielAttack = true;
+        isAttacking = true;
+        APawn* player = UGameplayStatics::GetPlayerCharacter(GetWorld(), 0);
+        if (player) {
+            FVector dir = player->GetActorLocation() - this->GetActorLocation();
+            dir.Z = 0.0f;
+            FRotator newRotate = dir.Rotation();
+            SetActorRotation(newRotate);
+        }
+        if (ShieldAttackMontage)
+        {
+            UE_LOG(LogTemp, Warning, TEXT("SHIELD COMBO"));
+            ACharacterBase* CharPlayer = Cast<ACharacterBase>(player);
+            CharPlayer->isDefense = false;
+            currentAnimMontage = ShieldAttackMontage;
+            PlayAnimMontage(ShieldAttackMontage);
+        }
+    }
+
     return 0;
 }
 
@@ -116,7 +151,6 @@ void ANPC::DodgeState_Implementation()
 {
     isDodging = true;
     wasHitDuringDodge = false;
-    attackCurrentIndex = 4;
     FVector playerLocation = UGameplayStatics::GetPlayerCharacter(GetWorld(), 0)->GetActorLocation();
     FVector npcLocation = GetActorLocation();
     FVector directionToPlayer = (playerLocation - npcLocation).GetSafeNormal();
@@ -129,12 +163,12 @@ void ANPC::DodgeState_Implementation()
         if (randomChoice < 0.5f)
         {
             dodgeDirection = -GetActorRightVector();
-            dodgeAngleOffset = -randomAngle;
+            dodgeAngleOffset = randomAngle;
         }
         else
         {
             dodgeDirection = GetActorRightVector();
-            dodgeAngleOffset = randomAngle;
+            dodgeAngleOffset = -randomAngle;    
         }
     }
     dodgeDirection.Normalize();
@@ -149,5 +183,23 @@ void ANPC::DodgeState_Implementation()
         currentAnimMontage = DodgeMontage;
         PlayAnimMontage(DodgeMontage);
     }
+}
+
+void ANPC::HandleOnMontageNotifyBegin(FName a_nNotifyName, const FBranchingPointNotifyPayload& a_pBranchingPayLoad)
+{
+
+    
+    attackCurrentIndex --;
+    if (attackCurrentIndex < 0) {
+        UAnimInstance* pAnimInst = GetMesh()->GetAnimInstance();
+        if (pAnimInst)
+        {
+            UE_LOG(LogTemp, Warning, TEXT("STOP MONTAGE"));
+            isAttacking = false;
+            pAnimInst->Montage_Stop(0.4f, AttackComboMontage);
+
+        }
+    }
+    
 }
 

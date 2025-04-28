@@ -6,6 +6,7 @@
 #include "NPCAIController.h"
 #include "Combat_Interface.h"
 #include "BehaviorTree/BlackboardComponent.h"
+
 UMyBTTask_MeleeAttack::UMyBTTask_MeleeAttack(FObjectInitializer const& ObjectInitializer)
 {
 	NodeName = "Melee Attack";
@@ -33,6 +34,9 @@ EBTNodeResult::Type UMyBTTask_MeleeAttack::ExecuteTask(UBehaviorTreeComponent& O
 
 bool UMyBTTask_MeleeAttack::CheckMontageIsStoped(ANPC* npc)
 {
+	if (npc->GetAnimMontage() == npc->AttackComboMontage) {
+		return true;
+	}
 	return npc->GetMesh()->GetAnimInstance()->Montage_GetIsStopped(npc->GetAnimMontage());
 }
 

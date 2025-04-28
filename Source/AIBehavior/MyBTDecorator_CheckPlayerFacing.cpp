@@ -21,7 +21,6 @@ bool UMyBTDecorator_CheckPlayerFacing::CalculateRawConditionValue(UBehaviorTreeC
 		FVector ToEnemy = (pawn->GetActorLocation() - player->GetActorLocation()).GetSafeNormal();
 
 		float dot = FVector::DotProduct(playerForward, ToEnemy);
-		UE_LOG(LogTemp, Error, TEXT("Current Index hien tai la: %f"), dot);
 		return dot < accpectAngleDot;	
 	}
 

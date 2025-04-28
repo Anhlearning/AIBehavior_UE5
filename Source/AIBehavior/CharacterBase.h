@@ -35,6 +35,15 @@ public:
 	float Health;
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Collision",meta=(AllowPrivateAccess="true"))
 	class UBoxComponent* RightFistCollisionBox;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Collision", meta = (AllowPrivateAccess = "true"))
+	class UBoxComponent* LeftFistCollisionBox;
+
+	UFUNCTION()
+	void ShieldAttackStart();
+	UFUNCTION()
+	void ShieldAttackEnd();
+
 	UFUNCTION()
 	void AttackStart();
 	UFUNCTION()
@@ -55,9 +64,13 @@ public:
 		UPrimitiveComponent* const OtherComp,
 		int const OtherBodyIndex
 	);
-	void HitDameReact(float const health);
+
+
+	void HitDameReact(AActor* InstigatorController,float const health);
 	bool GetIsAttacking();
 	int attackCurrentIndex = 0;
 	bool isDodging = false;
 	bool wasHitDuringDodge = false;
+	bool isDefense = false ; 
+	bool isShielAttack = false;
 };

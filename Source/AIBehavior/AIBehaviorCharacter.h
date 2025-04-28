@@ -71,6 +71,12 @@ public:
 
 	UFUNCTION()
 	void OnAttack();
+
+	UFUNCTION()
+	void Defender();
+	UFUNCTION()
+	void DissDefender();
+
 	class UAIPerceptionStimuliSourceComponent* Stimulus;
 	void SetupStimulusSource();
 };

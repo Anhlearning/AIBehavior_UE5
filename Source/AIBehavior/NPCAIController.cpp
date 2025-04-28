@@ -36,11 +36,11 @@ void ANPCAIController::SetupPerceptionSystem()
     // Tạo và thiết lập perception component
     SetPerceptionComponent(*CreateDefaultSubobject<UAIPerceptionComponent>(TEXT("PerceptionComponent")));
 
-    SightConfig->SightRadius = 500.f;
+    SightConfig->SightRadius = 800.f;
     SightConfig->LoseSightRadius = SightConfig->SightRadius + 25.f;
     SightConfig->PeripheralVisionAngleDegrees = 90.f;
-    SightConfig->SetMaxAge(10.f);
-    SightConfig->AutoSuccessRangeFromLastSeenLocation = 520.f;
+    SightConfig->SetMaxAge(5.f);
+    SightConfig->AutoSuccessRangeFromLastSeenLocation = 850.f;
 
     // Cho phép phát hiện tất cả các loại đối tượng
     SightConfig->DetectionByAffiliation.bDetectEnemies = true;
@@ -69,6 +69,7 @@ void ANPCAIController::OnTargetDetected(AActor* actor, FAIStimulus Stimulus)
             // Ghi lại thời điểm mất dấu player
             float TimeNow = GetWorld()->GetTimeSeconds();
             GetBlackboardComponent()->SetValueAsFloat("LastLostSightTime", TimeNow);
+            GetBlackboardComponent()->SetValueAsVector("LastKnownLocation", actor->GetActorLocation());
         }
     }
 }

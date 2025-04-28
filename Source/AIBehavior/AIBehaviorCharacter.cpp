@@ -80,6 +80,18 @@ void AAIBehaviorCharacter::OnAttack()
 	}
 }
 
+void AAIBehaviorCharacter::Defender()
+{
+	UE_LOG(LogTemp, Warning, TEXT("DEFEN SIEU CAP"));
+	isDefense = true;
+}
+
+void AAIBehaviorCharacter::DissDefender()
+{
+	UE_LOG(LogTemp, Warning, TEXT("DISSDEFEN SIEU CAP"));
+	isDefense = false;
+}
+
 void AAIBehaviorCharacter::SetupStimulusSource()
 {
 	Stimulus = CreateDefaultSubobject<UAIPerceptionStimuliSourceComponent>(TEXT("Stimulus"));
@@ -107,6 +119,8 @@ void AAIBehaviorCharacter::SetupPlayerInputComponent(class UInputComponent* Play
 		//Looking
 		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &AAIBehaviorCharacter::Look);
 		PlayerInputComponent->BindAction("Attack", IE_Pressed, this, &AAIBehaviorCharacter::OnAttack);
+		PlayerInputComponent->BindAction("Defen", IE_Repeat, this, &AAIBehaviorCharacter::Defender);
+		PlayerInputComponent->BindAction("Defen", IE_Released, this, &AAIBehaviorCharacter::DissDefender);
 
 	}
 

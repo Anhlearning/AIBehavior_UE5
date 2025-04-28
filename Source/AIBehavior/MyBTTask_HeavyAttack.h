@@ -18,4 +18,7 @@ public :
 	virtual EBTNodeResult::Type ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory) override;
 	UFUNCTION()
 	bool CheckMontageIsStoped(ANPC* npc);
+
+	UPROPERTY(EditAnywhere,BlueprintReadWrite)
+	float IsRangeAcceptable = 150.f;
 };

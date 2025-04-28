@@ -4,7 +4,8 @@
 #include "MyAnimNotifyDodgeState.h"
 #include "Kismet/GameplayStatics.h"
 #include "CharacterBase.h"
-
+#include "NPC.h"
+#include "Combat_Interface.h"
 void UMyAnimNotifyDodgeState::NotifyBegin(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation, float TotalDuration)
 {
 	/*if (MeshComp && MeshComp->GetOwner()) {
@@ -19,8 +20,7 @@ void UMyAnimNotifyDodgeState::NotifyEnd(USkeletalMeshComponent* MeshComp, UAnimS
 {
     if (MeshComp && MeshComp->GetOwner())
     {
-        UE_LOG(LogTemp, Warning, TEXT("NOTIFYEND"));
-        if (ACharacterBase* const character = Cast<ACharacterBase>(MeshComp->GetOwner()))
+        if (ANPC* const character = Cast<ANPC>(MeshComp->GetOwner()))
         {
             character->isDodging = false;
             if (!character->wasHitDuringDodge)
@@ -33,12 +33,15 @@ void UMyAnimNotifyDodgeState::NotifyEnd(USkeletalMeshComponent* MeshComp, UAnimS
                     {
                         FVector playerLocation = Player->GetActorLocation();
                         FVector playerBackward = -Player->GetActorForwardVector();
-                        FVector teleportLocation = playerLocation + (playerBackward * 80.f);
+                        FVector teleportLocation = playerLocation + (playerBackward * 100.f);
                         FRotator lookAtRotation = (playerLocation - teleportLocation).Rotation();
 
                         UE_LOG(LogTemp, Warning, TEXT("[TeleportTask] Teleporting to Location: %s, Rotation: %s"),
                             *teleportLocation.ToString(), *lookAtRotation.ToString());
                         character->SetActorLocationAndRotation(teleportLocation, lookAtRotation, false, nullptr, ETeleportType::TeleportPhysics);
+                        if (auto* const Icombat = Cast<ICombat_Interface>(character)) {
+                            Icombat->Execute_CounterAttack(character);
+                        }
                     }
                 }
                 else

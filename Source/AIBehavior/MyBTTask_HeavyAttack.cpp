@@ -6,6 +6,7 @@
 #include "NPCAIController.h"
 #include "BehaviorTree/BlackboardComponent.h"
 #include "Combat_Interface.h"
+#include "Kismet/GameplayStatics.h"
 
 UMyBTTask_HeavyAttack::UMyBTTask_HeavyAttack(FObjectInitializer const& ObjectInitializer)
 {
@@ -19,15 +20,16 @@ EBTNodeResult::Type UMyBTTask_HeavyAttack::ExecuteTask(UBehaviorTreeComponent& O
 		FinishLatentTask(OwnerComp, EBTNodeResult::Failed);
 		return EBTNodeResult::Failed;
 	}
-
 	if (auto* const cont = Cast<ANPCAIController>(OwnerComp.GetAIOwner())) {
 		auto* const npc = Cast<ANPC>(cont->GetPawn());
-		if (auto* const combat = Cast<ICombat_Interface>(npc)) {
-			if (CheckMontageIsStoped(npc)) {
-				combat->Execute_HeavyAttack(npc);
-
-				FinishLatentTask(OwnerComp, EBTNodeResult::Succeeded);
-				return EBTNodeResult::Succeeded;
+		auto* const player = UGameplayStatics::GetPlayerCharacter(GetWorld(), 0);
+		if (npc->GetDistanceTo(player) >= IsRangeAcceptable) {
+			if (auto* const combat = Cast<ICombat_Interface>(npc)) {
+				if (CheckMontageIsStoped(npc)) {
+					combat->Execute_HeavyAttack(npc);
+					FinishLatentTask(OwnerComp, EBTNodeResult::Succeeded);
+					return EBTNodeResult::Succeeded;
+				}
 			}
 		}
 	}

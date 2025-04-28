@@ -32,4 +32,5 @@ public:
 	int ShieldAttack();
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Combat")
 	void DodgeState();
+
 };

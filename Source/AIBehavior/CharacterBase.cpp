@@ -27,10 +27,20 @@ ACharacterBase::ACharacterBase() :
 		RightFistCollisionBox->AttachToComponent(GetMesh(), Rules, "hand_r_socket");
 		RightFistCollisionBox->SetRelativeLocation(FVector{ -7.f,0.f,0.f });
 	}
-	//// Đảm bảo nhân vật sử dụng Root Motion
-	//GetCharacterMovement()->bUseControllerDesiredRotation = false;
-	//GetCharacterMovement()->bOrientRotationToMovement = true;
-	//GetMesh()->GetAnimInstance()->RootMotionMode = ERootMotionMode::RootMotionFromMontagesOnly;
+
+	LeftFistCollisionBox = CreateDefaultSubobject<UBoxComponent>(TEXT("LEFTBOXCOLLISION"));
+	if (LeftFistCollisionBox) {
+		FAttachmentTransformRules const Rules{
+			EAttachmentRule::SnapToTarget,
+			EAttachmentRule::SnapToTarget,
+			EAttachmentRule::KeepWorld,
+			false
+		};
+		LeftFistCollisionBox->AttachToComponent(GetMesh(), Rules, "hand_l_socket");
+		LeftFistCollisionBox->SetRelativeLocation(FVector{ -7.f,0.f,0.f });
+	}
+
+	
 
 	FVector const origin{ 0.f,0.f,95.f };
 	if (WidgetComponent) {
@@ -59,23 +69,43 @@ void ACharacterBase::BeginPlay()
 	RightFistCollisionBox->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	RightFistCollisionBox->OnComponentBeginOverlap.AddDynamic(this, &ACharacterBase::OnAttackOverlapBegin);
 	RightFistCollisionBox->OnComponentEndOverlap.AddDynamic(this, &ACharacterBase::OnAttackOverlapEnd);
+
+	LeftFistCollisionBox->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	LeftFistCollisionBox->OnComponentBeginOverlap.AddDynamic(this, &ACharacterBase::OnAttackOverlapBegin);
+	LeftFistCollisionBox->OnComponentEndOverlap.AddDynamic(this, &ACharacterBase::OnAttackOverlapEnd);
+}
+
+void ACharacterBase::ShieldAttackStart()
+{
+	LeftFistCollisionBox->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+	LeftFistCollisionBox->SetCollisionProfileName("First");
+	LeftFistCollisionBox->SetNotifyRigidBodyCollision(true);
+}
+
+void ACharacterBase::ShieldAttackEnd()
+{
+	UE_LOG(LogTemp, Warning, TEXT("RESET SHIELD"));
+	isShielAttack = false;
+	isAttacking = false;
+	takeDamage = false;
+	LeftFistCollisionBox->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	LeftFistCollisionBox->SetNotifyRigidBodyCollision(false);
 }
 
 void ACharacterBase::AttackStart()
 {
-	//UE_LOG(LogTemp, Error, TEXT("ATTACK START"));
 	RightFistCollisionBox->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
 	RightFistCollisionBox->SetCollisionProfileName("First");
 	RightFistCollisionBox->SetNotifyRigidBodyCollision(true);
+
+	
 }
 
 void ACharacterBase::AttackEnd()
 {
-	//UE_LOG(LogTemp, Error, TEXT("ATTACK END"));
 	isAttacking = false;
 	takeDamage = false;
 	RightFistCollisionBox->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-	RightFistCollisionBox->SetCollisionProfileName("First");
 	RightFistCollisionBox->SetNotifyRigidBodyCollision(false);
 }
 
@@ -87,6 +117,11 @@ void ACharacterBase::OnAttackOverlapBegin(UPrimitiveComponent* const OverlappedC
 	if (otherActor == this) {
 		return;
 	}
+	auto* const otherChar = Cast<ACharacterBase>(otherActor);
+	if (otherChar->isDefense && !this->isShielAttack) {
+		return; 
+	}
+
 	else if (auto* const Enemy = Cast<ANPC>(otherActor)) {
 		if (Enemy->isDodging) {
 			Enemy->wasHitDuringDodge = true;
@@ -96,15 +131,14 @@ void ACharacterBase::OnAttackOverlapBegin(UPrimitiveComponent* const OverlappedC
 			}
 		}
 		auto const newHealth = Enemy->GetHealth() - Enemy->GetMaxHealth() * 0.1f;
-		Enemy->HitDameReact(newHealth);
+		Enemy->HitDameReact(this,newHealth);
 		takeDamage = true;
 	}
 	else {
-		UE_LOG(LogTemp, Error, TEXT("Dame Player"));
 		auto* const Player = Cast<AAIBehaviorCharacter>(otherActor);
 		if (Player) {
 			auto const newHealth = Player->GetHealth() - Player->GetMaxHealth() * 0.1f;
-			Player->HitDameReact(newHealth);
+			Player->HitDameReact(this,newHealth);
 			takeDamage = true;
 		}
 	}
@@ -115,9 +149,21 @@ void ACharacterBase::OnAttackOverlapEnd(UPrimitiveComponent* const OverlappedCom
 
 }
 
-void ACharacterBase::HitDameReact(float const health)
+void ACharacterBase::HitDameReact(AActor* InstigatorController,float const health)
 {
-	SetHealth(health);
+	
+	FVector HitDirection;
+	if (InstigatorController)
+	{
+		FVector KnockbackDirection = GetActorLocation() - InstigatorController->GetActorLocation();
+		KnockbackDirection.Z = 0.f; 
+		KnockbackDirection.Normalize();
+
+		float KnockbackStrength = 300.f; 
+
+		LaunchCharacter(KnockbackDirection * KnockbackStrength, true, true);
+		SetHealth(health);
+	}
 }
 
 bool ACharacterBase::GetIsAttacking()
@@ -156,11 +202,9 @@ void ACharacterBase::SetHealth(float const newHealth)
 	Health = newHealth;
 	if (auto* const Player = Cast<AAIBehaviorCharacter>(this)) {
 		if (Health <= 0.f) {
-			UE_LOG(LogTemp, Error, TEXT("YOU u"));
 		}
 	}
 	else {
-		UE_LOG(LogTemp, Error, TEXT("YOU Khon"));
 	}
 }
 

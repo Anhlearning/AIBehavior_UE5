@@ -21,7 +21,7 @@ public:
 
 	UBehaviorTree* GetBehaviorTree() const;
 
-protected:
+public:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 	
@@ -33,6 +33,15 @@ protected:
 	TArray<UAnimMontage*> Montages;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AI", meta = (AllowPrivateAccess = ""))
 	UAnimMontage* DodgeMontage;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AI", meta = (AllowPrivateAccess = ""))
+	UAnimMontage* AttackComboMontage;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AI", meta = (AllowPrivateAccess = ""))
+	UAnimMontage* AttackHeavyMontage;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AI", meta = (AllowPrivateAccess = ""))
+	UAnimMontage* AttackCounterMontage;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AI", meta = (AllowPrivateAccess = ""))
+	UAnimMontage* ShieldAttackMontage;
+
 	UAnimMontage* currentAnimMontage;
 	
 public:	
@@ -45,6 +54,10 @@ public:
 	UAnimMontage* GetAnimMontage();
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AI", meta = (AllowPrivateAccess = ""))
 	UStaticMeshComponent* Sword;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AI", meta = (AllowPrivateAccess = ""))
+	UStaticMeshComponent* Shield;
+
 	virtual int MeleeAttack_Implementation() override;
 	virtual int HeavyAttack_Implementation() override;
 	virtual int CounterAttack_Implementation() override;
@@ -52,4 +65,8 @@ public:
 	virtual void DodgeState_Implementation() override;
 	float LastAttackTime = 0.f;
 	float ComboMaxInterval = 1.8f;
+
+	UFUNCTION()
+	void HandleOnMontageNotifyBegin(FName a_nNotifyName, const FBranchingPointNotifyPayload& a_pBranchingPayLoad);
+
 };

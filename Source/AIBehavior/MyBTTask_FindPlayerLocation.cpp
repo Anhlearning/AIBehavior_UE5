@@ -12,23 +12,32 @@ UMyBTTask_FindPlayerLocation::UMyBTTask_FindPlayerLocation(FObjectInitializer co
 
 EBTNodeResult::Type UMyBTTask_FindPlayerLocation::ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory)
 {
-	if (auto* const Player = UGameplayStatics::GetPlayerCharacter(GetWorld(), 0)) {
-		auto const playerLocation = Player->GetActorLocation();
-		if (searchRandom) {
-			FNavLocation loc;
-			if (auto* const NavSys = UNavigationSystemV1::GetCurrent(GetWorld())) {
-				if (NavSys->GetRandomPointInNavigableRadius(playerLocation, radius, loc)) {
-					OwnerComp.GetBlackboardComponent()->SetValueAsVector(GetSelectedBlackboardKey(), loc.Location);
-					FinishLatentTask(OwnerComp, EBTNodeResult::Succeeded);
-					return EBTNodeResult::Succeeded;
-				}
-			}
-		}
-		else {
-			OwnerComp.GetBlackboardComponent()->SetValueAsVector(GetSelectedBlackboardKey(), playerLocation);
-		}
-		FinishLatentTask(OwnerComp, EBTNodeResult::Succeeded);
-		return EBTNodeResult::Succeeded;
-	}
-	return EBTNodeResult::Failed;
+    if (auto* const Player = UGameplayStatics::GetPlayerCharacter(GetWorld(), 0))
+    {
+        FVector TargetLocation = Player->GetActorLocation();
+
+        if (searchRandom)
+        {
+            if (auto* const NavSys = UNavigationSystemV1::GetCurrent(GetWorld()))
+            {
+                FNavLocation RandomLoc;
+                if (NavSys->GetRandomPointInNavigableRadius(TargetLocation, radius, RandomLoc))
+                {
+                    TargetLocation = RandomLoc.Location;
+                }
+                else
+                {
+                    FinishLatentTask(OwnerComp, EBTNodeResult::Failed);
+                    return EBTNodeResult::Failed;
+                }
+            }
+        }
+
+        OwnerComp.GetBlackboardComponent()->SetValueAsVector(GetSelectedBlackboardKey(), TargetLocation);
+        FinishLatentTask(OwnerComp, EBTNodeResult::Succeeded);
+        return EBTNodeResult::Succeeded;
+    }
+
+    FinishLatentTask(OwnerComp, EBTNodeResult::Failed);
+    return EBTNodeResult::Failed;
 }
